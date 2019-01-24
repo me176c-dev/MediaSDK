@@ -263,6 +263,7 @@ typedef struct tagENCODE_CAPS
     UINT    vaBufferMaxFrameSize;
     UINT    MaxPicWidth;
     UINT    MaxPicHeight;
+    UINT    MaxQuality;
     UCHAR   MaxNum_Reference;
     UCHAR   MaxNum_SPS_id;
     UCHAR   MaxNum_PPS_id;
