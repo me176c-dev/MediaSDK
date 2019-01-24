@@ -583,6 +583,7 @@ mfxStatus SetQualityLevel(
     VADisplay    vaDisplay,
     VAContextID  vaContextEncode,
     VABufferID & qualityParams_id,
+    MFX_ENCODE_CAPS const & caps,
     mfxEncodeCtrl const * /* pCtrl */)
 {
     VAStatus vaSts;
@@ -615,7 +616,7 @@ mfxStatus SetQualityLevel(
     misc_param->type = (VAEncMiscParameterType)VAEncMiscParameterTypeQualityLevel;
     quality_param = (VAEncMiscParameterBufferQualityLevel *)misc_param->data;
 
-    quality_param->quality_level = (unsigned int)(par.mfx.TargetUsage);
+    quality_param->quality_level = MFX_MIN((unsigned int)(par.mfx.TargetUsage), caps.MaxQuality);
 
     {
         MFX_AUTO_LTRACE(MFX_TRACE_LEVEL_EXTCALL, "vaUnmapBuffer");
@@ -1433,6 +1434,7 @@ mfxStatus VAAPIEncoder::CreateAuxilliaryDevice(
         VAConfigAttribMaxPictureWidth,
         VAConfigAttribEncInterlaced,
         VAConfigAttribEncMaxRefFrames,
+        VAConfigAttribEncQualityRange,
         VAConfigAttribEncSliceStructure,
         VAConfigAttribEncROI,
         VAConfigAttribEncSkipFrame,
@@ -1517,6 +1519,12 @@ mfxStatus VAAPIEncoder::CreateAuxilliaryDevice(
         m_caps.ddi_caps.MaxPicHeight = attrs[idx_map[VAConfigAttribMaxPictureHeight]].value;
     else
         m_caps.ddi_caps.MaxPicHeight = 1088;
+
+    if ((attrs[idx_map[VAConfigAttribEncQualityRange]].value != VA_ATTRIB_NOT_SUPPORTED) &&
+        (attrs[idx_map[VAConfigAttribEncQualityRange]].value != 0))
+        m_caps.MaxQuality  = attrs[idx_map[VAConfigAttribEncQualityRange]].value;
+    else
+        m_caps.MaxQuality = UINT_MAX;
 
     if (attrs[idx_map[VAConfigAttribEncSliceStructure]].value != VA_ATTRIB_NOT_SUPPORTED)
     {
@@ -1796,7 +1804,7 @@ mfxStatus VAAPIEncoder::CreateAccelerationService(MfxVideoParam const & par)
     MFX_CHECK_WITH_ASSERT(MFX_ERR_NONE == SetHRD(par, m_vaDisplay, m_vaContextEncode, m_hrdBufferId),                              MFX_ERR_DEVICE_FAILED);
     MFX_CHECK_WITH_ASSERT(MFX_ERR_NONE == SetRateControl(par, m_mbbrc, 0, 0, m_vaDisplay, m_vaContextEncode, m_rateParamBufferId, false, m_caps), MFX_ERR_DEVICE_FAILED);
     MFX_CHECK_WITH_ASSERT(MFX_ERR_NONE == SetFrameRate(par, m_vaDisplay, m_vaContextEncode, m_frameRateId),                        MFX_ERR_DEVICE_FAILED);
-    MFX_CHECK_WITH_ASSERT(MFX_ERR_NONE == SetQualityLevel(par, m_vaDisplay, m_vaContextEncode, m_qualityLevelId),            MFX_ERR_DEVICE_FAILED);
+    MFX_CHECK_WITH_ASSERT(MFX_ERR_NONE == SetQualityLevel(par, m_vaDisplay, m_vaContextEncode, m_qualityLevelId, m_caps),          MFX_ERR_DEVICE_FAILED);
     MFX_CHECK_WITH_ASSERT(MFX_ERR_NONE == SetQualityParams(par, m_vaDisplay, m_vaContextEncode, m_qualityParamsId),                MFX_ERR_DEVICE_FAILED);
 
 
@@ -1856,7 +1864,7 @@ mfxStatus VAAPIEncoder::Reset(MfxVideoParam const & par)
     MFX_CHECK_WITH_ASSERT(MFX_ERR_NONE == SetHRD(par, m_vaDisplay, m_vaContextEncode, m_hrdBufferId),                                                  MFX_ERR_DEVICE_FAILED);
     MFX_CHECK_WITH_ASSERT(MFX_ERR_NONE == SetRateControl(par, m_mbbrc, 0, 0, m_vaDisplay, m_vaContextEncode, m_rateParamBufferId, isBrcResetRequired, m_caps), MFX_ERR_DEVICE_FAILED);
     MFX_CHECK_WITH_ASSERT(MFX_ERR_NONE == SetFrameRate(par, m_vaDisplay, m_vaContextEncode, m_frameRateId),                                            MFX_ERR_DEVICE_FAILED);
-    MFX_CHECK_WITH_ASSERT(MFX_ERR_NONE == SetQualityLevel(par, m_vaDisplay, m_vaContextEncode, m_qualityLevelId),                                      MFX_ERR_DEVICE_FAILED);
+    MFX_CHECK_WITH_ASSERT(MFX_ERR_NONE == SetQualityLevel(par, m_vaDisplay, m_vaContextEncode, m_qualityLevelId, m_caps),                              MFX_ERR_DEVICE_FAILED);
     MFX_CHECK_WITH_ASSERT(MFX_ERR_NONE == SetQualityParams(par, m_vaDisplay, m_vaContextEncode, m_qualityParamsId),                                    MFX_ERR_DEVICE_FAILED);
 
     FillConstPartOfPps(par, m_pps);
