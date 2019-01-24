@@ -61,6 +61,7 @@ mfxStatus SetQualityLevel(
     VADisplay    vaDisplay,
     VAContextID  vaContextEncode,
     VABufferID & privateParams_id,
+    ENCODE_CAPS const & caps,
     mfxEncodeCtrl const * pCtrl = 0);
 
 void FillConstPartOfPps(
