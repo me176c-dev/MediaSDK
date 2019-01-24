@@ -318,6 +318,7 @@ typedef struct tagENCODE_CAPS
 struct MFX_ENCODE_CAPS
 {
     ENCODE_CAPS ddi_caps;
+    UINT MaxQuality;
     //bitrate control capabilities provided by MSDK
     bool CQPSupport;
     bool CBRSupport;
