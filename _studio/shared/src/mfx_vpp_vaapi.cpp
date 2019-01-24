@@ -302,33 +302,35 @@ mfxStatus VAAPIVideoProcessing::QueryCapabilities(mfxVppCaps& caps)
     vaSts = vaQueryVideoProcFilters(m_vaDisplay, m_vaContextVPP, filters, &num_filters);
     MFX_CHECK_WITH_ASSERT(VA_STATUS_SUCCESS == vaSts, MFX_ERR_DEVICE_FAILED);
 
+    // Ignore if filters are unsupported; this is checked below
+
     mfxU32 num_procamp_caps = VAProcColorBalanceCount;
     vaSts = vaQueryVideoProcFilterCaps(m_vaDisplay,
                                m_vaContextVPP,
                                VAProcFilterColorBalance,
                                &m_procampCaps, &num_procamp_caps);
-    MFX_CHECK_WITH_ASSERT(VA_STATUS_SUCCESS == vaSts, MFX_ERR_DEVICE_FAILED);
+    MFX_CHECK_WITH_ASSERT(VA_STATUS_SUCCESS == vaSts || VA_STATUS_ERROR_UNSUPPORTED_FILTER == vaSts, MFX_ERR_DEVICE_FAILED);
 
     mfxU32 num_denoise_caps = 1;
     vaSts = vaQueryVideoProcFilterCaps(m_vaDisplay,
                                m_vaContextVPP,
                                VAProcFilterNoiseReduction,
                                &m_denoiseCaps, &num_denoise_caps);
-    MFX_CHECK_WITH_ASSERT(VA_STATUS_SUCCESS == vaSts, MFX_ERR_DEVICE_FAILED);
+    MFX_CHECK_WITH_ASSERT(VA_STATUS_SUCCESS == vaSts || VA_STATUS_ERROR_UNSUPPORTED_FILTER == vaSts, MFX_ERR_DEVICE_FAILED);
 
     mfxU32 num_detail_caps = 1;
     vaSts = vaQueryVideoProcFilterCaps(m_vaDisplay,
                                m_vaContextVPP,
                                VAProcFilterSharpening,
                                &m_detailCaps, &num_detail_caps);
-    MFX_CHECK_WITH_ASSERT(VA_STATUS_SUCCESS == vaSts, MFX_ERR_DEVICE_FAILED);
+    MFX_CHECK_WITH_ASSERT(VA_STATUS_SUCCESS == vaSts || VA_STATUS_ERROR_UNSUPPORTED_FILTER == vaSts, MFX_ERR_DEVICE_FAILED);
 
     mfxU32 num_deinterlacing_caps = VAProcDeinterlacingCount;
     vaSts = vaQueryVideoProcFilterCaps(m_vaDisplay,
                                m_vaContextVPP,
                                VAProcFilterDeinterlacing,
                                &m_deinterlacingCaps, &num_deinterlacing_caps);
-    MFX_CHECK_WITH_ASSERT(VA_STATUS_SUCCESS == vaSts, MFX_ERR_DEVICE_FAILED);
+    MFX_CHECK_WITH_ASSERT(VA_STATUS_SUCCESS == vaSts || VA_STATUS_ERROR_UNSUPPORTED_FILTER == vaSts, MFX_ERR_DEVICE_FAILED);
 
 #ifdef MFX_ENABLE_VPP_FRC
     /* to check is FRC enabled or not*/
